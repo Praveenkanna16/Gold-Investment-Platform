@@ -9,6 +9,7 @@ node_modules/
 /.cache/
 /.vite/
 coverage/
+backend/dist/
 
 # OS/IDE
 .DS_Store
@@ -30,3 +31,6 @@ yarn-error.log*
 # Misc
 *.swp
 *.swo
+
+# Local dev DB
+backend/gold_platform.db
