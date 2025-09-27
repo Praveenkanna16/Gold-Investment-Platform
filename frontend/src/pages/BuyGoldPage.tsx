@@ -18,12 +18,12 @@ import {
 import CountUp from 'react-countup'
 import { useAppDispatch, useAppSelector } from '../utils/hooks'
 import { initiateBuy, fetchBalance, fetchPrice } from '../store/slices/goldSlice'
-import { openRazorpayCheckout } from '../services/razorpay'
 import api from '../services/api'
 import toast from 'react-hot-toast'
 import { usePolling } from '../utils/usePolling'
 import type { RootState } from '../store'
 import SIPSection from '../components/SIPSection'
+import { fetchSettings } from '../store/slices/settingsSlice'
 
 export default function BuyGoldPage() {
   const dispatch = useAppDispatch()
@@ -38,6 +38,7 @@ export default function BuyGoldPage() {
   useEffect(() => {
     dispatch(fetchPrice())
     dispatch(fetchBalance())
+    dispatch(fetchSettings())
   }, [dispatch])
 
   // Live polling for price and balance
@@ -46,6 +47,15 @@ export default function BuyGoldPage() {
 
   const currentPrice = Number(price?.pricePerGram ?? 0)
   const goldQuantity = currentPrice > 0 ? amount / currentPrice : 0
+  const settings = useAppSelector((s: RootState) => s.settings.settings)
+  const spreadBps = Number(settings?.fees?.spreadBps ?? 0)
+  const convBps = Number(settings?.fees?.convenienceFeeBps ?? 0)
+  const gstRate = Number(settings?.fees?.gstRate ?? 3)
+  const baseAmount = amount
+  const spread = Math.round((baseAmount * (spreadBps / 10000)) * 100) / 100
+  const convenienceFee = Math.round((baseAmount * (convBps / 10000)) * 100) / 100
+  const gst = Math.round((convenienceFee * (gstRate / 100)) * 100) / 100
+  const totalPayable = Math.round((baseAmount + spread + convenienceFee + gst) * 100) / 100
 
   const packages = [
     {
@@ -119,43 +129,18 @@ export default function BuyGoldPage() {
       const order = data?.payment?.order
       const txId = data?.tx?.id
 
-      if (provider === 'razorpay' && order?.id) {
-        const key = import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined
-        if (!key) {
-          toast.error('Razorpay key is not configured')
-          setProcessing(false)
-          return
-        }
-        await openRazorpayCheckout({
-          key,
-          amount: order.amount,
-          currency: order.currency || 'INR',
-          order_id: order.id,
-          name: 'GoldVault',
-          description: `Purchase ${goldQuantity.toFixed(4)}g gold`,
-          handler: async (response: any) => {
-            await handlePaymentSuccess({
-              txId,
-              userId: user?.id,
-              status: 'success',
-              paymentId: response.razorpay_payment_id,
-              orderId: response.razorpay_order_id,
-              signature: response.razorpay_signature,
-            })
-          },
-          prefill: {
-            name: user ? `${user.firstName} ${user.lastName}` : '',
-            email: user?.email || '',
-          },
-          theme: {
-            color: '#f59e0b',
-          },
-          modal: {
-            ondismiss: () => {
-              setProcessing(false)
-              toast.error('Payment cancelled')
-            },
-          },
+      if (provider === 'phonepe' && order?.redirectUrl) {
+        // Redirect user to PhonePe hosted payment page
+        window.location.href = order.redirectUrl
+        return
+      } else if (provider === 'mock') {
+        // Dev fallback: immediately mark as success
+        await handlePaymentSuccess({
+          txId,
+          userId: user?.id,
+          status: 'success',
+          paymentId: 'mock',
+          orderId: 'mock',
         })
       } else {
         toast.error(`Unsupported payment provider: ${provider || 'unknown'}`)
@@ -380,9 +365,21 @@ export default function BuyGoldPage() {
                   <span className="text-gray-600">Price per gram</span>
                   <span className="text-lg font-semibold">₹{currentPrice.toLocaleString()}</span>
                 </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                  <span className="text-gray-600">Spread ({spreadBps} bps)</span>
+                  <span className="text-lg font-semibold">₹{spread.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                  <span className="text-gray-600">Convenience Fee ({convBps} bps)</span>
+                  <span className="text-lg font-semibold">₹{convenienceFee.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                  <span className="text-gray-600">GST on Fee ({gstRate}%)</span>
+                  <span className="text-lg font-semibold">₹{gst.toFixed(2)}</span>
+                </div>
                 <div className="flex justify-between items-center py-3">
-                  <span className="text-gray-600">Processing Fee</span>
-                  <span className="text-lg font-semibold text-green-600">FREE</span>
+                  <span className="text-gray-800 font-semibold">Total Payable</span>
+                  <span className="text-xl font-bold text-yellow-700">₹{totalPayable.toLocaleString()}</span>
                 </div>
               </div>
 

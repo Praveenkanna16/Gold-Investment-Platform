@@ -1,9 +1,10 @@
-import { Body, Controller, Headers, Post, Req, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Headers, Post, Req, BadRequestException, Get, Query, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { UsersService } from '../users/users.service';
 import { TransactionStatus } from '../common/enums/transaction-status.enum';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -12,6 +13,7 @@ export class PaymentsController {
     private readonly paymentsService: PaymentsService,
     private readonly transactions: TransactionsService,
     private readonly users: UsersService,
+    private readonly config: ConfigService,
   ) {}
 
   @Post('webhook')
@@ -32,7 +34,7 @@ export class PaymentsController {
       return { received: true };
     }
 
-    // Razorpay verification
+    // Razorpay verification (legacy)
     const rzpSig = headers['x-razorpay-signature'];
     if (rzpSig) {
       const ok = this.paymentsService.verifyRazorpaySignature(rawBody, rzpSig);
@@ -42,10 +44,56 @@ export class PaymentsController {
       return { received: true };
     }
 
+    // PhonePe webhook (verify by fetching status from PhonePe)
+    if (payload?.merchantTransactionId || payload?.transactionId || payload?.code) {
+      const mtid = payload?.merchantTransactionId || payload?.orderId || payload?.transactionId;
+      const statusResp = await this.paymentsService.checkPhonePeStatus(mtid);
+      const tx = await this.transactions.findById(mtid);
+      const userId = tx?.userId || payload?.merchantUserId;
+      if (tx && userId) {
+        await this.handleFinalize(
+          mtid,
+          userId,
+          statusResp.status === 'success' ? 'success' : statusResp.status === 'failed' ? 'failed' : undefined,
+          statusResp.transactionId,
+          mtid,
+          'phonepe',
+        );
+      }
+      return { received: true };
+    }
+
     // Fallback (dev/mock)
     const parsed = this.paymentsService.parseWebhook(payload);
     await this.handleFinalize(parsed.txId, parsed.userId, parsed.status, parsed.paymentId, parsed.orderId, 'mock');
     return { received: true };
+  }
+
+  @Get('phonepe/redirect')
+  @ApiOperation({ summary: 'PhonePe redirect endpoint to finalize and forward to frontend' })
+  async phonepeRedirect(@Query() query: any, @Res() res: any) {
+    const mtid = query?.merchantTransactionId || query?.transactionId || query?.mtid;
+    if (!mtid) {
+      return res.status(400).json({ message: 'Missing merchantTransactionId' });
+    }
+
+    const statusResp = await this.paymentsService.checkPhonePeStatus(mtid);
+    const tx = await this.transactions.findById(mtid);
+    const userId = tx?.userId;
+    if (tx && userId && statusResp.status !== 'pending') {
+      await this.handleFinalize(
+        mtid,
+        userId,
+        statusResp.status === 'success' ? 'success' : 'failed',
+        statusResp.transactionId,
+        mtid,
+        'phonepe',
+      );
+    }
+
+    const frontend = this.config.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+    const redirectUrl = `${frontend}/?payment=${statusResp.status}`;
+    return res.redirect(302, redirectUrl);
   }
 
   private async handleFinalize(

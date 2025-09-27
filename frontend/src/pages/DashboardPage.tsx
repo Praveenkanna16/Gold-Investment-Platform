@@ -23,6 +23,14 @@ import { fetchTransactions } from '../store/slices/transactionsSlice'
 import { Link } from 'react-router-dom'
 import { usePolling } from '../utils/usePolling'
 import type { RootState } from '../store'
+import SIPCard from '../components/SIPCard'
+import AutoDipCard from '../components/AutoDipCard'
+import ConverterCard from '../components/ConverterCard'
+import TrustCenterCard from '../components/TrustCenterCard'
+import { fetchSettings } from '../store/slices/settingsSlice'
+import GoalProgressCard from '../components/GoalProgressCard'
+import PriceAlertsCard from '../components/PriceAlertsCard'
+import RewardsCard from '../components/RewardsCard'
 
  
 
@@ -39,6 +47,7 @@ export default function DashboardPage() {
     dispatch(fetchPrice())
     dispatch(fetchBalance())
     dispatch(fetchTransactions())
+    dispatch(fetchSettings())
   }, [dispatch])
 
   // Live polling
@@ -161,6 +170,40 @@ export default function DashboardPage() {
               💰
             </motion.div>
           </div>
+        </motion.div>
+
+        {/* Action Center */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 items-stretch"
+        >
+          <SIPCard />
+          <AutoDipCard />
+          <ConverterCard />
+        </motion.div>
+
+        {/* Trust Center */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <TrustCenterCard />
+        </motion.div>
+
+        {/* Goals, Alerts, Rewards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 items-stretch"
+        >
+          <GoalProgressCard />
+          <PriceAlertsCard />
+          <RewardsCard />
         </motion.div>
 
         {/* Stats Grid */}

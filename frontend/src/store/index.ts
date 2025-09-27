@@ -5,6 +5,7 @@ import goldReducer from './slices/goldSlice'
 import txReducer from './slices/transactionsSlice'
 import sipReducer from './slices/sipSlice'
 import settingsReducer from './slices/settingsSlice'
+import autoDipReducer from './slices/autoDipSlice'
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     transactions: txReducer,
     sip: sipReducer,
     settings: settingsReducer,
+    autoDip: autoDipReducer,
   },
 })
 

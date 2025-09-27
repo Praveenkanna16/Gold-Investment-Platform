@@ -12,13 +12,18 @@ const typeorm_1 = require("@nestjs/typeorm");
 const admin_controller_1 = require("./admin.controller");
 const user_entity_1 = require("../users/entities/user.entity");
 const transaction_entity_1 = require("../transactions/entities/transaction.entity");
+const admin_settings_entity_1 = require("./entities/admin-settings.entity");
+const admin_settings_controller_1 = require("./admin.settings.controller");
+const sip_plan_entity_1 = require("../gold/entities/sip-plan.entity");
+const auto_dip_rule_entity_1 = require("../gold/entities/auto-dip-rule.entity");
+const admin_sip_controller_1 = require("./admin.sip.controller");
 let AdminModule = class AdminModule {
 };
 exports.AdminModule = AdminModule;
 exports.AdminModule = AdminModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, transaction_entity_1.Transaction])],
-        controllers: [admin_controller_1.AdminController],
+        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, transaction_entity_1.Transaction, admin_settings_entity_1.AdminSettings, sip_plan_entity_1.SIPPlan, auto_dip_rule_entity_1.AutoDipRule])],
+        controllers: [admin_controller_1.AdminController, admin_settings_controller_1.AdminSettingsController, admin_sip_controller_1.AdminSIPController],
     })
 ], AdminModule);
 //# sourceMappingURL=admin.module.js.map

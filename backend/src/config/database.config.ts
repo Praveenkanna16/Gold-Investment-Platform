@@ -4,6 +4,9 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { GoldPrice } from '../gold/entities/gold-price.entity';
+import { AdminSettings } from '../admin/entities/admin-settings.entity';
+import { SIPPlan } from '../gold/entities/sip-plan.entity';
+import { AutoDipRule } from '../gold/entities/auto-dip-rule.entity';
 
 export const databaseConfig = (configService: ConfigService): TypeOrmModuleOptions => {
   const isProduction = configService.get('NODE_ENV') === 'production';
@@ -14,7 +17,7 @@ export const databaseConfig = (configService: ConfigService): TypeOrmModuleOptio
     return {
       type: 'sqlite',
       database: 'gold_platform.db',
-      entities: [User, Transaction, GoldPrice],
+      entities: [User, Transaction, GoldPrice, AdminSettings, SIPPlan, AutoDipRule],
       synchronize: true, // Auto-sync for SQLite development
       logging: true,
     };
@@ -28,7 +31,7 @@ export const databaseConfig = (configService: ConfigService): TypeOrmModuleOptio
     username: configService.get('DATABASE_USERNAME', 'postgres'),
     password: configService.get('DATABASE_PASSWORD', 'password'),
     database: configService.get('DATABASE_NAME', 'gold_investment_platform'),
-    entities: [User, Transaction, GoldPrice],
+    entities: [User, Transaction, GoldPrice, AdminSettings, SIPPlan, AutoDipRule],
     migrations: ['dist/database/migrations/*.js'],
     synchronize: !isProduction, // Only sync in development
     ssl: isProduction ? { rejectUnauthorized: false } : false,
@@ -40,7 +43,7 @@ export const databaseConfig = (configService: ConfigService): TypeOrmModuleOptio
 const dataSourceOptions: DataSourceOptions = {
   type: 'sqlite',
   database: 'gold_platform.db',
-  entities: [User, Transaction, GoldPrice],
+  entities: [User, Transaction, GoldPrice, AdminSettings, SIPPlan, AutoDipRule],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: true,
 };

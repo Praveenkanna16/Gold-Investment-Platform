@@ -1,4 +1,5 @@
 import { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { useEffect } from 'react'
 import { Routes, Route, Navigate, Link } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
@@ -24,6 +25,16 @@ export default function App() {
   useEffect(() => {
     dispatch(fetchSettings())
   }, [dispatch])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const status = params.get('payment')
+    if (status === 'success') {
+      toast.success('Payment successful! Your gold balance has been updated.')
+    } else if (status === 'failed') {
+      toast.error('Payment failed or cancelled. Please try again.')
+    }
+  }, [])
 
   const bannerClasses = settings?.banner?.type === 'warning' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
                         settings?.banner?.type === 'success' ? 'bg-green-100 text-green-800 border-green-300' :

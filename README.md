@@ -6,13 +6,12 @@ A production-ready, secure, and scalable gold investment platform built with mod
 
 - **Frontend**: React + TypeScript + Redux Toolkit + Tailwind CSS
 - **Backend**: NestJS + TypeScript + PostgreSQL
-- **Payment**: Razorpay/Stripe integration (test mode)
+- **Payment**: PhonePe integration (sandbox/test mode)
 - **Security**: JWT auth, bcrypt, Helmet, input validation
 - **Testing**: Unit, Integration, E2E tests
 - **Deployment**: Docker, CI/CD, AWS/GCP ready
 
 ## 🚀 Quick Start
-
 ### Prerequisites
 - Node.js 18+
 - PostgreSQL 14+
@@ -142,15 +141,27 @@ npm run test:e2e
 ```
 DATABASE_URL=postgresql://user:password@localhost:5432/gold_platform
 JWT_SECRET=your-jwt-secret
-RAZORPAY_KEY_ID=your-razorpay-key
-RAZORPAY_KEY_SECRET=your-razorpay-secret
+
+# PhonePe (Sandbox)
+PHONEPE_MERCHANT_ID=your-merchant-id
+PHONEPE_SALT_KEY=your-salt-key
+# Optional (default 1)
+PHONEPE_SALT_INDEX=1
+# Optional (defaults to PhonePe sandbox)
+PHONEPE_BASE_URL=https://api-preprod.phonepe.com/apis/pg-sandbox
+
+# URLs
+API_BASE_URL=http://localhost:3000/api/v1
+FRONTEND_URL=http://localhost:3001
+PHONEPE_CALLBACK_URL=http://localhost:3000/api/v1/payments/webhook
+PHONEPE_REDIRECT_URL=http://localhost:3000/api/v1/payments/phonepe/redirect
+
 GOLD_API_KEY=your-gold-price-api-key
 ```
 
 **Frontend (.env)**
 ```
-REACT_APP_API_URL=http://localhost:3000
-REACT_APP_RAZORPAY_KEY_ID=your-razorpay-key
+VITE_API_URL=http://localhost:3000/api/v1
 ```
 
 ## 🚀 Deployment

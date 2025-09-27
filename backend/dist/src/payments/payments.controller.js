@@ -19,11 +19,13 @@ const payments_service_1 = require("./payments.service");
 const transactions_service_1 = require("../transactions/transactions.service");
 const users_service_1 = require("../users/users.service");
 const transaction_status_enum_1 = require("../common/enums/transaction-status.enum");
+const config_1 = require("@nestjs/config");
 let PaymentsController = class PaymentsController {
-    constructor(paymentsService, transactions, users) {
+    constructor(paymentsService, transactions, users, config) {
         this.paymentsService = paymentsService;
         this.transactions = transactions;
         this.users = users;
+        this.config = config;
     }
     async webhook(payload, headers, req) {
         const rawBody = req.rawBody || Buffer.from(JSON.stringify(payload));
@@ -48,9 +50,34 @@ let PaymentsController = class PaymentsController {
             await this.handleFinalize(parsed.txId, parsed.userId, parsed.status, parsed.paymentId, parsed.orderId, 'razorpay');
             return { received: true };
         }
+        if (payload?.merchantTransactionId || payload?.transactionId || payload?.code) {
+            const mtid = payload?.merchantTransactionId || payload?.orderId || payload?.transactionId;
+            const statusResp = await this.paymentsService.checkPhonePeStatus(mtid);
+            const tx = await this.transactions.findById(mtid);
+            const userId = tx?.userId || payload?.merchantUserId;
+            if (tx && userId) {
+                await this.handleFinalize(mtid, userId, statusResp.status === 'success' ? 'success' : statusResp.status === 'failed' ? 'failed' : undefined, statusResp.transactionId, mtid, 'phonepe');
+            }
+            return { received: true };
+        }
         const parsed = this.paymentsService.parseWebhook(payload);
         await this.handleFinalize(parsed.txId, parsed.userId, parsed.status, parsed.paymentId, parsed.orderId, 'mock');
         return { received: true };
+    }
+    async phonepeRedirect(query, res) {
+        const mtid = query?.merchantTransactionId || query?.transactionId || query?.mtid;
+        if (!mtid) {
+            return res.status(400).json({ message: 'Missing merchantTransactionId' });
+        }
+        const statusResp = await this.paymentsService.checkPhonePeStatus(mtid);
+        const tx = await this.transactions.findById(mtid);
+        const userId = tx?.userId;
+        if (tx && userId && statusResp.status !== 'pending') {
+            await this.handleFinalize(mtid, userId, statusResp.status === 'success' ? 'success' : 'failed', statusResp.transactionId, mtid, 'phonepe');
+        }
+        const frontend = this.config.get('FRONTEND_URL') || 'http://localhost:3001';
+        const redirectUrl = `${frontend}/?payment=${statusResp.status}`;
+        return res.redirect(302, redirectUrl);
     }
     async handleFinalize(txId, userId, status, paymentId, orderId, provider) {
         if (!txId || !userId)
@@ -89,11 +116,21 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PaymentsController.prototype, "webhook", null);
+__decorate([
+    (0, common_1.Get)('phonepe/redirect'),
+    (0, swagger_1.ApiOperation)({ summary: 'PhonePe redirect endpoint to finalize and forward to frontend' }),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], PaymentsController.prototype, "phonepeRedirect", null);
 exports.PaymentsController = PaymentsController = __decorate([
     (0, swagger_1.ApiTags)('Payments'),
     (0, common_1.Controller)('payments'),
     __metadata("design:paramtypes", [payments_service_1.PaymentsService,
         transactions_service_1.TransactionsService,
-        users_service_1.UsersService])
+        users_service_1.UsersService,
+        config_1.ConfigService])
 ], PaymentsController);
 //# sourceMappingURL=payments.controller.js.map

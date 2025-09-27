@@ -12,7 +12,29 @@ export declare class GoldController {
         tx: import("../transactions/entities/transaction.entity").Transaction;
         payment: {
             provider: string;
-            order: any;
+            order: {
+                id: string;
+                amount: number;
+                currency: string;
+                redirectUrl?: undefined;
+                merchantTransactionId?: undefined;
+            };
+        } | {
+            provider: string;
+            order: {
+                redirectUrl: any;
+                merchantTransactionId: string;
+                id?: undefined;
+                amount?: undefined;
+                currency?: undefined;
+            };
+        };
+        pricing: {
+            baseAmount: number;
+            spread: number;
+            convenienceFee: number;
+            gst: number;
+            totalPayable: number;
         };
     }>;
 }

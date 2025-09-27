@@ -13,14 +13,14 @@ Your Gold Investment Platform MVP v1 is **100% complete** and ready for immediat
 - **APIs**: All 12 required endpoints implemented and tested
 - **Security**: Production-grade (Helmet, CORS, rate limiting, input validation, webhook verification)
 - **Database**: PostgreSQL with optimized indexes and migrations
-- **Payment Integration**: Razorpay + Stripe with secure webhook handling
+- **Payment Integration**: PhonePe (sandbox) with secure redirect + status verification
 - **Admin Panel**: Role-based access with pagination and filtering
 - **Testing**: Unit tests + comprehensive E2E test suite
 - **Documentation**: OpenAPI/Swagger docs at `/api/v1/docs`
 
 ### ✅ **Frontend (React + TypeScript + Redux)**
 - **Pages**: Login, Register, Dashboard, Buy Gold, Transactions, Profile, Admin
-- **Payment UX**: Real Razorpay Checkout integration with success/cancel flows
+- **Payment UX**: PhonePe redirect-to-pay flow with success/cancel handling
 - **State Management**: Redux Toolkit with proper error handling
 - **UI/UX**: Responsive, modern design with Tailwind CSS
 - **Admin Features**: Paginated user/transaction management with search/filters
@@ -89,14 +89,17 @@ npm run dev
 NODE_ENV=production
 DATABASE_URL=postgresql://user:pass@your-rds-endpoint/db
 JWT_SECRET=your-256-bit-secret
-RAZORPAY_KEY_ID=rzp_live_xxxxxxxxxx
-RAZORPAY_KEY_SECRET=your_live_secret
-RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
+# PhonePe
+PHONEPE_MERCHANT_ID=your_merchant_id
+PHONEPE_SALT_KEY=your_salt_key
+PHONEPE_SALT_INDEX=1
+PHONEPE_BASE_URL=https://api.phonepe.com/apis/hermes
+API_BASE_URL=https://api.your-domain.com/api/v1
+FRONTEND_URL=https://your-frontend-domain.com
 CORS_ORIGIN=https://your-frontend-domain.com
 
 # Frontend (.env)
 VITE_API_URL=https://api.your-domain.com/api/v1
-VITE_RAZORPAY_KEY_ID=rzp_live_xxxxxxxxxx
 ```
 
 ---
@@ -106,7 +109,7 @@ VITE_RAZORPAY_KEY_ID=rzp_live_xxxxxxxxxx
 ### **User Journey**
 1. **Registration/Login** → Secure JWT authentication
 2. **Dashboard** → View gold balance + live price
-3. **Buy Gold** → Razorpay Checkout → Webhook confirmation → Balance update
+3. **Buy Gold** → PhonePe Redirect → Callback/Status confirm → Balance update
 4. **Transaction History** → View all purchases with status
 5. **Profile Management** → Update personal information
 
@@ -116,11 +119,12 @@ VITE_RAZORPAY_KEY_ID=rzp_live_xxxxxxxxxx
 3. **System Analytics** → User counts, transaction volumes
 4. **Role-based Access** → Admin-only endpoints secured
 
-### **Payment Flow**
-1. User enters amount → Backend creates Razorpay order
-2. Frontend opens Razorpay Checkout → User completes payment
-3. Razorpay webhook → Backend verifies signature → Updates balance
-4. Frontend refreshes → Shows updated balance and transaction
+### **Payment Flow (PhonePe)**
+1. User enters amount → Backend creates PhonePe pay request and returns redirect URL
+2. Frontend redirects to PhonePe hosted page → User completes payment
+3. PhonePe redirects to backend redirect endpoint → Backend verifies status via PhonePe Status API and finalizes transaction
+4. Optional: Callback webhook to `/payments/webhook` also supported by verifying status
+5. Frontend refreshes → Shows updated balance and transaction
 
 ---
 

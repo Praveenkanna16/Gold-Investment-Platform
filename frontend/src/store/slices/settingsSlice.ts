@@ -19,6 +19,23 @@ export interface AdminSettings {
     text: string
     type: BannerType
   }
+  trust?: {
+    partnerName?: string
+    purity?: string
+    insured?: boolean
+    auditUrl?: string
+    storageInfo?: string
+  }
+  fees?: {
+    spreadBps?: number
+    convenienceFeeBps?: number
+    gstRate?: number
+  }
+  disclosures?: {
+    howItWorksUrl?: string
+    faqUrl?: string
+    termsUrl?: string
+  }
 }
 
 interface SettingsState {

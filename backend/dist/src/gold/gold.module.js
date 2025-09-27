@@ -16,18 +16,23 @@ const users_module_1 = require("../users/users.module");
 const transactions_module_1 = require("../transactions/transactions.module");
 const payments_module_1 = require("../payments/payments.module");
 const user_entity_1 = require("../users/entities/user.entity");
+const sip_plan_entity_1 = require("./entities/sip-plan.entity");
+const auto_dip_rule_entity_1 = require("./entities/auto-dip-rule.entity");
+const sip_controller_1 = require("./sip.controller");
+const auto_dip_controller_1 = require("./auto-dip.controller");
+const admin_settings_entity_1 = require("../admin/entities/admin-settings.entity");
 let GoldModule = class GoldModule {
 };
 exports.GoldModule = GoldModule;
 exports.GoldModule = GoldModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([gold_price_entity_1.GoldPrice, user_entity_1.User]),
+            typeorm_1.TypeOrmModule.forFeature([gold_price_entity_1.GoldPrice, user_entity_1.User, sip_plan_entity_1.SIPPlan, auto_dip_rule_entity_1.AutoDipRule, admin_settings_entity_1.AdminSettings]),
             users_module_1.UsersModule,
             transactions_module_1.TransactionsModule,
             payments_module_1.PaymentsModule,
         ],
-        controllers: [gold_controller_1.GoldController],
+        controllers: [gold_controller_1.GoldController, sip_controller_1.GoldSIPController, auto_dip_controller_1.GoldAutoDipController],
         providers: [gold_service_1.GoldService],
     })
 ], GoldModule);

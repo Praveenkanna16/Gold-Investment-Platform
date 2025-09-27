@@ -70,9 +70,9 @@ docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/gold-platform-backend:l
       "secrets": [
         {"name": "DATABASE_URL", "valueFrom": "arn:aws:ssm:us-east-1:123456789012:parameter/gold-platform/database-url"},
         {"name": "JWT_SECRET", "valueFrom": "arn:aws:ssm:us-east-1:123456789012:parameter/gold-platform/jwt-secret"},
-        {"name": "RAZORPAY_KEY_ID", "valueFrom": "arn:aws:ssm:us-east-1:123456789012:parameter/gold-platform/razorpay-key-id"},
-        {"name": "RAZORPAY_KEY_SECRET", "valueFrom": "arn:aws:ssm:us-east-1:123456789012:parameter/gold-platform/razorpay-key-secret"},
-        {"name": "RAZORPAY_WEBHOOK_SECRET", "valueFrom": "arn:aws:ssm:us-east-1:123456789012:parameter/gold-platform/razorpay-webhook-secret"}
+        {"name": "PHONEPE_MERCHANT_ID", "valueFrom": "arn:aws:ssm:us-east-1:123456789012:parameter/gold-platform/phonepe-merchant-id"},
+        {"name": "PHONEPE_SALT_KEY", "valueFrom": "arn:aws:ssm:us-east-1:123456789012:parameter/gold-platform/phonepe-salt-key"},
+        {"name": "PHONEPE_SALT_INDEX", "valueFrom": "arn:aws:ssm:us-east-1:123456789012:parameter/gold-platform/phonepe-salt-index"}
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
@@ -196,10 +196,10 @@ aws ssm put-parameter --name "/gold-platform/database-url" --value "postgresql:/
 # JWT
 aws ssm put-parameter --name "/gold-platform/jwt-secret" --value "your-super-secure-jwt-secret-256-bits-long" --type "SecureString"
 
-# Razorpay (Production keys)
-aws ssm put-parameter --name "/gold-platform/razorpay-key-id" --value "rzp_live_xxxxxxxxxx" --type "SecureString"
-aws ssm put-parameter --name "/gold-platform/razorpay-key-secret" --value "your_live_razorpay_secret" --type "SecureString"
-aws ssm put-parameter --name "/gold-platform/razorpay-webhook-secret" --value "your_webhook_secret" --type "SecureString"
+# PhonePe (Production)
+aws ssm put-parameter --name "/gold-platform/phonepe-merchant-id" --value "your_merchant_id" --type "SecureString"
+aws ssm put-parameter --name "/gold-platform/phonepe-salt-key" --value "your_salt_key" --type "SecureString"
+aws ssm put-parameter --name "/gold-platform/phonepe-salt-index" --value "1" --type "String"
 
 # CORS
 aws ssm put-parameter --name "/gold-platform/cors-origin" --value "https://your-frontend-domain.com" --type "String"
